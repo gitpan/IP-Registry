@@ -2,6 +2,19 @@
 <--------1---------2---------3---------4---------5---------6---------7->
 
 
+IP-Registry-0211.004, 2002.11.08
+----------------------------
+Tweak to Makefile.PL that should shorten installation time.
+Documented the weird IP range problem.
+
+
+IP-Registry-0211.003, 2002.11.08
+----------------------------
+Performance boost. On my machine, was looking up one IP address every
+17 seconds. Now looks up more than 256 IPs per second! Like the old
+programming adage goes - "make it work, then make it fast".
+
+
 IP-Registry-0211.002, 2002.11.07
 ----------------------------
 Now uses AnyDBM_File, which should be a bit more compatible.

@@ -5,7 +5,7 @@ use Socket;
 use Fcntl;
 
 use vars qw ( $VERSION );
-$VERSION = '211.003'; # NOV 2002, version 0.03
+$VERSION = '211.004'; # NOV 2002, version 0.04
 BEGIN { @AnyDBM_File::ISA = qw(NDBM_File GDBM_File SDBM_File DB_File) }
 use AnyDBM_File;
 
@@ -169,6 +169,16 @@ and translates it into a two-letter country code. If the IP address is
 not contained within the database, returns undef.
 
 =back
+
+=head1 BUGS/LIMITATIONS
+
+A few weird IP ranges have been assigned by the registries. By weird, I mean
+ranges that are not powers of two. I've made a compromise with these ranges
+for the sake of performance. Any weird ranges are rounded down to the nearest
+power of two. For example, the range beginning at 24.24.0.0 has a range of 
+393216 IPs, but I have rounded this down to a range of 262144 (2**18), which 
+means that one third of the IPs in this range will be missed. Sorry, such is 
+life! IP to CC tanslation isn't an exact science.
 
 =head1 COPYRIGHT
 

@@ -39,8 +39,6 @@ my %packed_size;
 
 # this is our database
 my %ip;
-tie (%ip,'AnyDBM_File','lib/IP/Registry/data',O_RDWR|O_CREAT, 0666)
-    or die ("couldn't create registry database: $!");
 
 # and these are our raw files that will combine to form the database
 my @reg_files = ('apnic-2002-11-01', 'arin.20021101', 'ripencc.20021101');
@@ -48,7 +46,13 @@ foreach my $reg (@reg_files){
     process_reg_file($reg);
 }
 
-untie %ip;
+my %database;
+tie (%database,'AnyDBM_File','lib/IP/Registry/data',O_RDWR|O_CREAT, 0666)
+    or die ("couldn't create registry database: $!");
+while (my($key,$value) = each %ip){
+    $database{$key} = $value;
+}
+untie %database;
 
 # if everything works, we can build our makefile
 WriteMakefile(

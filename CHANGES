@@ -1,29 +1,35 @@
 <-------------- THE SEVENTY-TWO CHARACTER COLUMN-OMETER --------------->
 <--------1---------2---------3---------4---------5---------6---------7->
 
+IP-Registry-0211.005, 2002.11.08
+--------------------------------
+If hostname ends in two-letter top-level domain, this is changed to 
+upper case and returned, with no further processing (thx, Rob Knobben,
+Rivals Digital Media).
+
 
 IP-Registry-0211.004, 2002.11.08
-----------------------------
+--------------------------------
 Tweak to Makefile.PL that should shorten installation time.
 Documented the weird IP range problem.
 
 
 IP-Registry-0211.003, 2002.11.08
-----------------------------
+--------------------------------
 Performance boost. On my machine, was looking up one IP address every
 17 seconds. Now looks up more than 256 IPs per second! Like the old
 programming adage goes - "make it work, then make it fast".
 
 
 IP-Registry-0211.002, 2002.11.07
-----------------------------
+--------------------------------
 Now uses AnyDBM_File, which should be a bit more compatible.
 A couple of typos have been fixed in the POD.
 README added.
 
 
 IP-Registry-0211.001, 2002.11.07
-----------------------------
+--------------------------------
 First attempt at producing a combined interface to the internet address
 registries. Seems to work.
 

@@ -5,11 +5,15 @@ use Socket;
 use Fcntl;
 
 use vars qw ( $VERSION );
-$VERSION = '211.004'; # NOV 2002, version 0.04
+$VERSION = '211.005'; # NOV 2002, version 0.05
 BEGIN { @AnyDBM_File::ISA = qw(NDBM_File GDBM_File SDBM_File DB_File) }
 use AnyDBM_File;
 
 my $singleton = undef;
+
+my $tld_match = qr/\.([a-zA-Z][a-zA-Z])$/o;
+my $ip_match = qr/^([01]?\d\d|2[0-4]\d|25[0-5])\.([01]?\d\d|2[0-4]\d|25[0-5])\.([01]?\d\d|2[0-4]\d|25[0-5])\.([01]?\d\d|2[0-4]\d|25[0-5])$/o;
+
 my %mask = ( 
 	     4 => pack("B32", '11111111111111111111111111110000'),
 	     5 => pack("B32", '11111111111111111111111111100000'),
@@ -80,9 +84,12 @@ sub new
 sub inet_atocc
 {
     my ($self,$inet_a) = @_;
-    my $inet_n = inet_aton($inet_a)
-	or return undef;
-    return $self->inet_ntocc($inet_n);
+    unless ($inet_a =~ $ip_match){
+	if (my $cc = _get_cc_from_tld($inet_a)){
+	    return $cc;
+	}
+    }
+    return $self->inet_ntocc(inet_aton($inet_a));
 }
 
 sub inet_ntocc
@@ -108,7 +115,15 @@ sub _get_cc ($$$)
     }
 }
 
-
+sub _get_cc_from_tld ($)
+{
+    my $hostname = shift;
+    if ($hostname =~ $tld_match){
+	return uc $1;
+    } else {
+	return undef;
+    }
+}
 
 1;
 __END__
@@ -179,6 +194,15 @@ power of two. For example, the range beginning at 24.24.0.0 has a range of
 393216 IPs, but I have rounded this down to a range of 262144 (2**18), which 
 means that one third of the IPs in this range will be missed. Sorry, such is 
 life! IP to CC tanslation isn't an exact science.
+
+Only works with IPv4 addresses.
+
+=head1 SEE ALSO
+
+L<IP::Country> - slower, but more accurate. Uses reverse hostname lookups
+before consulting this database.
+
+L<Geo::IP> - wrapper around the geoip C libraries. Faster, but less portable.
 
 =head1 COPYRIGHT
 

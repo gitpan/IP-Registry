@@ -1,6 +1,17 @@
 <-------------- THE SEVENTY-TWO CHARACTER COLUMN-OMETER --------------->
 <--------1---------2---------3---------4---------5---------6---------7->
 
+IP-Registry-0211.007, 2002.11.12 - vacation release
+--------------------------------
+BUGFIX: weird IP range problem has been fixed by chopping ranges into
+smaller ranges that are exact powers of two. Coverage of random IP 
+addresses has now jumped from around 40% to around 43%.
+
+Reduced size of IP range hash by about 28,000 ranges. Lookup now 
+proceeds acording to distribution of IP addresses within each range.
+The associated performace boost is about 40% :)
+
+
 IP-Registry-0211.006, 2002.11.08
 --------------------------------
 Performance boost. Now looks up about 10,000 IP addresses per second.
@@ -8,6 +19,7 @@ This is on 730MHz Pentium III (Coppermine) with 512MB RAM. I think
 I'll stop optimizing now. w00t!
 Tests switched from Test::More to Test, as people complained about 
 downloading modules.
+
 
 IP-Registry-0211.005, 2002.11.08
 --------------------------------

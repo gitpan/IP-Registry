@@ -35,7 +35,16 @@ print "Building registry... this will take a moment...\n";
 
 # cached packed IP ranges
 my $log2 = log(2);
-my %packed_size;
+my $null_ip  = inet_aton('0.0.0.0');
+my %mask;
+my %not_mask;
+my %packed_range;
+
+foreach (my $i=0; $i<=32; $i++){
+    $mask{$i} = pack('B32', ('1'x(32-$i)).('0'x$i));
+    $not_mask{$i} = pack('B32', ('0'x(32-$i)).('1'x$i));
+    $packed_range{$i} = pack('C',$i);
+}
 
 # this is our database
 my %ip;
@@ -46,6 +55,61 @@ foreach my $reg (@reg_files){
     process_reg_file($reg);
 }
 
+
+print "Optimizing registry...\n";
+my $run_again = 1;
+my $removals = 0;
+while ($run_again) {
+    $run_again = 0;
+    foreach my $key (sort keys %ip)
+    {
+	my $ip = substr($key,0,4);
+	my $mask = substr($key,4,2);
+	my $cc = $ip{$key};
+
+	my $decimal_mask = unpack("C",$mask);
+	my $dotted_ip = inet_ntoa($ip);
+
+	
+	my $next_ip = pack("N",unpack("N",$ip) + 2**$decimal_mask);
+	my $next_key = $next_ip.$mask;
+	my $big_mask = pack("C",$decimal_mask+1);
+	if (exists $ip{$next_key}){
+	    if ($ip{$next_key} eq $cc){
+		if (get_max_mask($ip) > $decimal_mask){
+		    if ($decimal_mask < 24){
+#			print "$dotted_ip - $decimal_mask - ".inet_ntoa($next_ip)." - $cc\n";
+			delete $ip{$key};
+			delete $ip{$next_key};
+			$ip{$ip.$big_mask} = $cc;
+			$removals++;
+			$run_again = 1;
+		    }
+		}
+	    }
+	}
+    }
+    print "  removed $removals keys while optimizing... ";
+    if ($run_again){
+	print "running again\n";
+    } else {
+	print "\n";
+    }
+}
+
+# used for discovering the distribution of IP addresses by mask
+#my %mask_sizes;
+#foreach my $key (keys %ip){
+#    my $mask = substr($key,4,2);
+#    my $decimal_mask = unpack("C",$mask);
+#    $mask_sizes{$decimal_mask}++;
+#}
+#
+#foreach my $size (sort keys %mask_sizes){
+#    print "$size = ".$mask_sizes{$size} * (2**$size)."\n";
+#}
+
+print "Saving registry...\n";
 my %database;
 tie (%database,'AnyDBM_File','lib/IP/Registry/data',O_RDWR|O_CREAT, 0666)
     or die ("couldn't create registry database: $!");
@@ -72,21 +136,37 @@ sub process_reg_file
 	chomp $line;
 	next unless $line =~ /^([^\|]+)\|(..)\|ipv4\|([^\|]+)\|(\d+)\|/;
 	my ($auth,$cc,$ip,$size) = ($1,$2,$3,$4);
-	next if ($auth eq 'iana'); # ipv6 and private IP ranges
+	$cc = undef if ($auth eq 'iana'); # ipv6 and private IP ranges
 
-	unless (exists $packed_size{$size}){
-	    # this rounds weird network ranges down
-	    # to the nearest power of 2 - which is necessary
-	    # if we're going to have fast lookups for assignments
-	    # such as 24.24.0.0, which has a range of 393216 IPs,
-	    # [in this example, it is rounded down to a range of 
-	    # 262144 (2**18), which means that one third of the
-	    # IPs in this range will be missed.
-	    # Sorry, such is life! IP to CC tanslation isn't exact anyway.
-	    $packed_size{$size} = pack("C", int(log($size)/$log2));
-	}
 	my $packed_ip = inet_aton($ip);
-	$ip{$packed_ip.$packed_size{$size}} = $cc;
+	add_region($packed_ip,$size,$cc);
     }
     close REG || warn("can't close $reg, but continuing: $!");
+}
+
+sub add_region
+{
+    my ($ip,$size,$cc) = @_;
+    die unless $size;
+    while ($size > 0){
+	my $mask = int(log($size)/$log2);
+	my $d_ip = inet_ntoa($ip);
+	if (get_max_mask($ip) < $mask){
+	    $mask = get_max_mask($ip);
+	}
+	$ip{$ip.$packed_range{$mask}} = $cc;
+	$size = $size - (2 ** $mask);
+	$ip = pack("N", unpack("N",$ip) + 2 ** $mask);
+    }
+}
+
+sub get_max_mask
+{
+    my $ip = shift;
+    for (my $i= 32; $i>=1; $i--){
+	if (($ip & $not_mask{$i}) eq $null_ip){
+	    return $i;
+	}
+    }
+    die("odd IP");
 }

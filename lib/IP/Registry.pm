@@ -6,60 +6,22 @@ BEGIN { @AnyDBM_File::ISA = qw(SDBM_File GDBM_File NDBM_File DB_File ODBM_File )
 use AnyDBM_File;
 
 use vars qw ( $VERSION );
-$VERSION = '211.006'; # NOV 2002, version 0.06
+$VERSION = '211.007'; # NOV 2002, version 0.07
 
 my $singleton = undef;
 my %ip_db;
 my $tld_match = qr/\.([a-zA-Z][a-zA-Z])$/o;
 my $ip_match = qr/^([01]?\d\d|2[0-4]\d|25[0-5])\.([01]?\d\d|2[0-4]\d|25[0-5])\.([01]?\d\d|2[0-4]\d|25[0-5])\.([01]?\d\d|2[0-4]\d|25[0-5])$/o;
 
-my %mask = ( 
-	     4 => pack("B32", '11111111111111111111111111110000'),
-	     5 => pack("B32", '11111111111111111111111111100000'),
-	     6 => pack("B32", '11111111111111111111111111000000'),
-	     7 => pack("B32", '11111111111111111111111110000000'),
-	     8 => pack("B32", '11111111111111111111111100000000'),
-	     9 => pack("B32", '11111111111111111111111000000000'),
-	     10 => pack("B32",'11111111111111111111110000000000'),
-	     11 => pack("B32",'11111111111111111111100000000000'),
-	     12 => pack("B32",'11111111111111111111000000000000'),
-	     13 => pack("B32",'11111111111111111110000000000000'),
-	     14 => pack("B32",'11111111111111111100000000000000'),
-	     15 => pack("B32",'11111111111111111000000000000000'),
-	     16 => pack("B32",'11111111111111110000000000000000'),
-	     17 => pack("B32",'11111111111111100000000000000000'),
-	     18 => pack("B32",'11111111111111000000000000000000'),
-	     19 => pack("B32",'11111111111110000000000000000000'),
-	     20 => pack("B32",'11111111111100000000000000000000'),
-	     21 => pack("B32",'11111111111000000000000000000000'),
-	     22 => pack("B32",'11111111110000000000000000000000'),
-	     23 => pack("B32",'11111111100000000000000000000000'),
-	     24 => pack("B32",'11111111000000000000000000000000')
-	     );
+my %mask;
+my %packed_range;
 
-my %packed_range = (
-		    4 => pack("C",4),
-		    5 => pack("C",5),
-		    6 => pack("C",6),
-		    7 => pack("C",7),
-		    8 => pack("C",8),
-		    9 => pack("C",9),
-		    10=> pack("C",10),
-		    11=> pack("C",11),
-		    12=> pack("C",12),
-		    13=> pack("C",13),
-		    14=> pack("C",14),
-		    15=> pack("C",15),
-		    16=> pack("C",16),
-		    17=> pack("C",17),
-		    18=> pack("C",18),
-		    19=> pack("C",19),
-		    20=> pack("C",20),
-		    21=> pack("C",21),
-		    22=> pack("C",22),
-		    23=> pack("C",23),
-		    24=> pack("C",24)
-		    );
+my @ip_distribution = (24,28,16,17,18,19,20,21,22,23,13,15,14,12,11,10,9,8);
+
+foreach my $i (@ip_distribution){
+    $mask{$i} = pack('B32', ('1'x(32-$i)).('0'x$i));
+    $packed_range{$i} = pack('C',$i);
+}
 
 sub new
 {
@@ -91,7 +53,7 @@ sub inet_atocc
 sub inet_ntocc
 {
     my ($self,$inet_n) = @_;
-    for (my $range=24; $range>=4; $range--)
+    foreach my $range (@ip_distribution)
     {
 	my $masked_ip = $inet_n & $mask{$range};
 	if (exists $ip_db{$masked_ip.$packed_range{$range}}){
@@ -168,21 +130,16 @@ not contained within the database, returns undef.
 =head1 PERFORMANCE
 
 With a random selection of 65,000 IP addresses, the module can look up
-about 10,000 IP addresses per second. This is on 730MHz Pentium III 
-(Coppermine) with 512MB RAM. Out of this random selection of IP addresses
-(many of which will not exist), 40% had an associated country code.
+over 10,000 IP addresses per second on a 730MHz PIII (Coppermine) and
+over 20,000 IP addresses per second on a 1.3GHz Athlon. Out of this random 
+selection of IP addresses, 43% had an associated country code. Please let 
+me know if you've run this against a set of 'real' IP addresses from your
+log files, and have details of the proportion of IPs that had associated
+country codes.
 
 =head1 BUGS/LIMITATIONS
 
-A few weird IP ranges have been assigned by the registries. By weird, I mean
-ranges that are not powers of two. I've made a compromise with these ranges
-for the sake of performance. Any weird ranges are rounded down to the nearest
-power of two. For example, the range beginning at 24.24.0.0 has a range of 
-393216 IPs, but I have rounded this down to a range of 262144 (2**18), which 
-means that one third of the IPs in this range will be missed. Sorry, such is 
-life! IP to CC tanslation isn't an exact science.
-
-Only works with IPv4 addresses.
+Only works with IPv4 addresses. LACNIC ranges have not yet been incorporated.
 
 =head1 SEE ALSO
 

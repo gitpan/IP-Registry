@@ -9,6 +9,9 @@ use strict;
 use Fcntl;
 use Socket;
 
+BEGIN { @AnyDBM_File::ISA = qw(NDBM_File GDBM_File SDBM_File DB_File) }
+use AnyDBM_File;
+
 my $PACKAGE = 'IP::Registry';
 (my $PACKAGE_FILE = $PACKAGE) =~ s|::|/|g;
 my $LAST_API_CHANGE = 211.001;
@@ -28,11 +31,6 @@ unless ($@) { # Make sure we did find the module.
     }
 }
 
-eval('require GDBM_File');
-if ($@){
-    die('cannot create Makefile without the GDBM_File module');
-}
-
 print "Building registry... this will take a moment...\n";
 
 # cached packed IP ranges
@@ -41,7 +39,7 @@ my %packed_size;
 
 # this is our database
 my %ip;
-tie (%ip,'GDBM_File','lib/IP/Registry/data',O_RDWR|O_CREAT, 0666)
+tie (%ip,'AnyDBM_File','lib/IP/Registry/data',O_RDWR|O_CREAT, 0666)
     or die ("couldn't create registry database: $!");
 
 # and these are our raw files that will combine to form the database

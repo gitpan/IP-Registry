@@ -1,12 +1,13 @@
 package IP::Registry;
 use strict;
 use Carp;
-use GDBM_File;
 use Socket;
 use Fcntl;
 
 use vars qw ( $VERSION );
-$VERSION = '211.001'; # NOV 2002, version 0.01
+$VERSION = '211.002'; # NOV 2002, version 0.02
+BEGIN { @AnyDBM_File::ISA = qw(NDBM_File GDBM_File SDBM_File DB_File) }
+use AnyDBM_File;
 
 my $singleton = undef;
 my %mask = ( 
@@ -64,7 +65,7 @@ sub new
         my $class = ref($caller) || $caller;
 	(my $module_dir = $INC{'IP/Registry.pm'}) =~ s/\.pm$//;
 	my %hash;
-	tie (%hash,'GDBM_File',"$module_dir/data",O_RDONLY, 0666)
+	tie (%hash,'AnyDBM_File',"$module_dir/data",O_RDONLY, 0666)
 	    or die ("couldn't open registry database: $!");
 	$singleton = bless \%hash, $class;
     }
@@ -123,7 +124,7 @@ most common domain (.com) offers no help when looking for country.
 
 This module comes bundled with a database of countries where various IP addresses
 have been assigned. Although the country of assignment will probably be the
-country associated with a large ISP rather than the client herslef, this is
+country associated with a large ISP rather than the client herself, this is
 probably good enough for most log analysis applications.
 
 This module will probably be most useful when used after domain lookup has failed,
@@ -138,9 +139,11 @@ The constructor takes no arguments.
 
 =head1 OBJECT METHODS
 
-All object methods are designed to be used in an object-oriented fashion:
+All object methods are designed to be used in an object-oriented fashion.
 
   $result = $object->foo_method($bar,$baz);
+
+Using the module in a procedural fashion (without the arrow syntax) won't work.
 
 =over 4
 
@@ -154,6 +157,7 @@ For multi-homed hosts (hosts with more than one address), the first
 address found is returned.
 
 =item $cc = $reg-E<gt>inet_ntocc(IP_ADDRESS)
+
 Takes a string (an opaque string as returned by Socket::inet_aton()) 
 and translates it into a two-letter country code. If the IP address is 
 not contained within the database, returns undef.

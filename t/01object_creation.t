@@ -1,7 +1,7 @@
-use Test::More tests => 1;
+use Test;
 use strict;
 use warnings;
 use IP::Registry;
+BEGIN { plan tests => 1 }
 
-my $reg;
-ok($reg = IP::Registry->new(),'object creates ok');
+ok(IP::Registry->new());

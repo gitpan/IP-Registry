@@ -9,7 +9,7 @@ use strict;
 use Fcntl;
 use Socket;
 
-BEGIN { @AnyDBM_File::ISA = qw(NDBM_File GDBM_File SDBM_File DB_File) }
+BEGIN { @AnyDBM_File::ISA = qw(SDBM_File GDBM_File NDBM_File DB_File OBBM_File ) }
 use AnyDBM_File;
 
 my $PACKAGE = 'IP::Registry';
@@ -59,9 +59,9 @@ WriteMakefile(
 	      NAME            => $PACKAGE,
 	      VERSION_FROM    => "lib/$PACKAGE_FILE.pm", # finds $VERSION
 	      PREREQ_PM       => {
-		  'Test::More' => undef
-	      },
-	      AUTHOR          => 'Nigel Wetters <nwetters@cpan.org>'
+		  },
+	      AUTHOR          => 'Nigel Wetters <nwetters@cpan.org>',
+	      ABSTRACT_FROM   => "lib/$PACKAGE_FILE.pm"
 	      );
 
 sub process_reg_file

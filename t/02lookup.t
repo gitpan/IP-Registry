@@ -1,7 +1,8 @@
-use Test::More tests => 36;
+use Test;
 use strict;
 use warnings;
 use IP::Registry;
+BEGIN { plan tests => 28 }
 
 my $cc = IP::Registry->new();
 
@@ -16,7 +17,7 @@ while (<DATA>) {
 __DATA__
 203.174.65.12	JP
 212.208.74.140	FR
-200.219.192.106	BR
+200.219.192.106	UY
 134.102.101.18	DE
 193.75.148.28	BE
 134.102.101.18	DE
@@ -34,7 +35,7 @@ __DATA__
 192.106.150.150	IT
 203.174.65.12	JP
 212.208.74.140	FR
-200.219.192.106	BR
+200.219.192.106	UY
 134.102.101.18	DE
 193.75.148.28	BE
 134.102.101.18	DE
@@ -42,11 +43,3 @@ __DATA__
 194.244.83.2	IT
 203.15.106.23	AU
 196.31.1.1	ZA
-yahoo.com	US
-www.bundesregierung.de	DE
-www.thaigov.go.th	TH
-www.president.ir	IR
-www.gov.ru	RU
-www.parliament.ge	GE
-www.cpv.org.vn	VN
-alfa.nic.in	IN

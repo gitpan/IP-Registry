@@ -1,16 +1,15 @@
 package IP::Registry;
 use strict;
-use Carp;
 use Socket;
 use Fcntl;
-
-use vars qw ( $VERSION );
-$VERSION = '211.005'; # NOV 2002, version 0.05
-BEGIN { @AnyDBM_File::ISA = qw(NDBM_File GDBM_File SDBM_File DB_File) }
+BEGIN { @AnyDBM_File::ISA = qw(SDBM_File GDBM_File NDBM_File DB_File ODBM_File ) }
 use AnyDBM_File;
 
-my $singleton = undef;
+use vars qw ( $VERSION );
+$VERSION = '211.006'; # NOV 2002, version 0.06
 
+my $singleton = undef;
+my %ip_db;
 my $tld_match = qr/\.([a-zA-Z][a-zA-Z])$/o;
 my $ip_match = qr/^([01]?\d\d|2[0-4]\d|25[0-5])\.([01]?\d\d|2[0-4]\d|25[0-5])\.([01]?\d\d|2[0-4]\d|25[0-5])\.([01]?\d\d|2[0-4]\d|25[0-5])$/o;
 
@@ -71,12 +70,9 @@ sub new
 	my %database;
 	tie (%database,'AnyDBM_File',"$module_dir/data",O_RDONLY, 0666)
 	    or die ("couldn't open registry database: $!");
-	my %cache;
-	while (my ($key, $value) = each %database){
-	    $cache{$key} = $value;
-	}
+	%ip_db = %database;
 	untie %database;
-	$singleton = bless \%cache, $class;
+	$singleton = bless {}, $class;
     }
     return $singleton;
 }
@@ -85,8 +81,8 @@ sub inet_atocc
 {
     my ($self,$inet_a) = @_;
     unless ($inet_a =~ $ip_match){
-	if (my $cc = _get_cc_from_tld($inet_a)){
-	    return $cc;
+	if ($inet_a =~ $tld_match){
+	    return uc $1;
 	}
     }
     return $self->inet_ntocc(inet_aton($inet_a));
@@ -95,33 +91,12 @@ sub inet_atocc
 sub inet_ntocc
 {
     my ($self,$inet_n) = @_;
-    croak('not a valid IP address as might be returned by Socket::inet_aton()')
-	unless (length $inet_n == 4);
     for (my $range=24; $range>=4; $range--)
     {
-	if (my $cc = $self->_get_cc($inet_n,$range)){
-	    return $cc;
+	my $masked_ip = $inet_n & $mask{$range};
+	if (exists $ip_db{$masked_ip.$packed_range{$range}}){
+	    return $ip_db{$masked_ip.$packed_range{$range}};
 	}
-    }
-}
-
-sub _get_cc ($$$)
-{
-    my ($self,$inet_n,$range) = @_;
-    
-    my $inet_n = $inet_n & $mask{$range};
-    if (exists ${$self}{$inet_n.$packed_range{$range}}){
-	return ${$self}{$inet_n.$packed_range{$range}};
-    }
-}
-
-sub _get_cc_from_tld ($)
-{
-    my $hostname = shift;
-    if ($hostname =~ $tld_match){
-	return uc $1;
-    } else {
-	return undef;
     }
 }
 
@@ -177,6 +152,11 @@ If the resolved IP address is not contained within the database, returns undef.
 For multi-homed hosts (hosts with more than one address), the first 
 address found is returned.
 
+If domain names are submitted to inet_atocc that end with a two-letter 
+top-level domain, this is upper-cased and returned without further effort. 
+If you don't like this behaviour, call Socket::inet_aton() on the hostname 
+and pass it to IP::Registry::inet_ntocc() rather than this method.
+
 =item $cc = $reg-E<gt>inet_ntocc(IP_ADDRESS)
 
 Takes a string (an opaque string as returned by Socket::inet_aton()) 
@@ -184,6 +164,13 @@ and translates it into a two-letter country code. If the IP address is
 not contained within the database, returns undef.
 
 =back
+
+=head1 PERFORMANCE
+
+With a random selection of 65,000 IP addresses, the module can look up
+about 10,000 IP addresses per second. This is on 730MHz Pentium III 
+(Coppermine) with 512MB RAM. Out of this random selection of IP addresses
+(many of which will not exist), 40% had an associated country code.
 
 =head1 BUGS/LIMITATIONS
 
@@ -203,6 +190,14 @@ L<IP::Country> - slower, but more accurate. Uses reverse hostname lookups
 before consulting this database.
 
 L<Geo::IP> - wrapper around the geoip C libraries. Faster, but less portable.
+
+L<www.apnic.net> - Asia pacific
+
+L<www.ripe.net> - Europe
+
+L<www.arin.net> - North America
+
+L<www.lacnic.net> - Latin America (soon)
 
 =head1 COPYRIGHT
 

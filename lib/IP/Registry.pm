@@ -5,7 +5,7 @@ use Socket;
 use Fcntl;
 
 use vars qw ( $VERSION );
-$VERSION = '211.002'; # NOV 2002, version 0.02
+$VERSION = '211.003'; # NOV 2002, version 0.03
 BEGIN { @AnyDBM_File::ISA = qw(NDBM_File GDBM_File SDBM_File DB_File) }
 use AnyDBM_File;
 
@@ -64,10 +64,15 @@ sub new
     unless (defined $singleton){
         my $class = ref($caller) || $caller;
 	(my $module_dir = $INC{'IP/Registry.pm'}) =~ s/\.pm$//;
-	my %hash;
-	tie (%hash,'AnyDBM_File',"$module_dir/data",O_RDONLY, 0666)
+	my %database;
+	tie (%database,'AnyDBM_File',"$module_dir/data",O_RDONLY, 0666)
 	    or die ("couldn't open registry database: $!");
-	$singleton = bless \%hash, $class;
+	my %cache;
+	while (my ($key, $value) = each %database){
+	    $cache{$key} = $value;
+	}
+	untie %database;
+	$singleton = bless \%cache, $class;
     }
     return $singleton;
 }
@@ -98,8 +103,9 @@ sub _get_cc ($$$)
     my ($self,$inet_n,$range) = @_;
     
     my $inet_n = $inet_n & $mask{$range};
-    my %registry = %$self;
-    return $registry{$inet_n.$packed_range{$range}};
+    if (exists ${$self}{$inet_n.$packed_range{$range}}){
+	return ${$self}{$inet_n.$packed_range{$range}};
+    }
 }
 
 

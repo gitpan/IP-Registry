@@ -48,6 +48,8 @@ foreach my $reg (@reg_files){
     process_reg_file($reg);
 }
 
+untie %ip;
+
 # if everything works, we can build our makefile
 WriteMakefile(
 	      NAME            => $PACKAGE,
@@ -84,4 +86,3 @@ sub process_reg_file
     }
     close REG || warn("can't close $reg, but continuing: $!");
 }
-

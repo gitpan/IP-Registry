@@ -1,0 +1,5 @@
+CHANGES
+Makefile.PL
+MANIFEST
+lib/IP/Registry.pm
+t/00parsable.t

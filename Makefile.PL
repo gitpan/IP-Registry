@@ -3,9 +3,8 @@ WriteMakefile(
 	      NAME            => 'IP::Registry',
 	      VERSION_FROM    => 'lib/IP/Registry.pm',
 	      PREREQ_PM       => {
-		  'IP::Country::Fast' => '211.008'
+		  'IP::Country::Fast' => '212.005'
 		  },
-	      AUTHOR          => 'Nigel Wetters <nwetters@cpan.org>',
-	      ABSTRACT_FROM   => 'lib/IP/Registry.pm'
+	      AUTHOR          => 'Nigel Wetters <nwetters@cpan.org>'
 	      );
 

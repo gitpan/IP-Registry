@@ -1,7 +1,7 @@
 package IP::Registry;
 use IP::Country::Fast;
 use vars qw ( $VERSION @ISA );
-$VERSION = '9999.999';
+$VERSION = '9999.9999';
 push @ISA, 'IP::Country::Fast';
 
 BEGIN

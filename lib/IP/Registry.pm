@@ -1,11 +1,13 @@
 package IP::Registry;
-use strict;
-
 use IP::Country::Fast;
-
 use vars qw ( $VERSION @ISA );
-$VERSION = '211.008'; # NOV 2002, version 0.08
+$VERSION = '9999.999';
 push @ISA, 'IP::Country::Fast';
+
+BEGIN
+{
+    warn('IP::Registry has been deprecated, please use IP::Country::Fast');
+}
 
 1;
 __END__

@@ -1,8 +1,0 @@
-CHANGES
-Makefile.PL
-MANIFEST
-README
-lib/IP/Registry.pm
-t/01object_creation.t
-t/02lookup.t
-t/03performance.t

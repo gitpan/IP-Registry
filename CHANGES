@@ -1,6 +1,11 @@
 <-------------- THE SEVENTY-TWO CHARACTER COLUMN-OMETER --------------->
 <--------1---------2---------3---------4---------5---------6---------7->
 
+IP-Registry-9999.999, 2002.12.03 - final release
+--------------------------------
+Removed tests. Module closed.
+
+
 IP-Registry-0211.008, 2002.11.18 - final release
 --------------------------------
 Deprecated. Use IP::Country::Fast
